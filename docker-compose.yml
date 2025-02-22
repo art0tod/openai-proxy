@@ -3,5 +3,7 @@ services:
     build: .
     restart: always
     env_file: .env
+    volumes:
+      - ./users.txt:/app/users.txt
     ports:
       - "4252:3000"
