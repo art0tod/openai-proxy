@@ -75,7 +75,7 @@ app.get('/chat-completion', async (req, res) => {
             {
                 model: 'gpt-4o-mini',
                 messages: [{ role: 'user', content: request }],
-                max_tokens: 100
+                max_tokens: 400
             },
             {
                 headers: {
@@ -87,6 +87,40 @@ app.get('/chat-completion', async (req, res) => {
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch response from OpenAI' });
+    }
+});
+
+app.post('/generate-image', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const { prompt } = req.body;
+    if (!prompt) {
+        return res.status(400).json({ error: 'Missing prompt' });
+    }
+
+    try {
+        const response = await axios.post(
+            'https://api.openai.com/v1/images/generations',
+            {
+                model: "dall-e-2",
+                prompt: prompt,
+                n: 1,
+                size: "512x512"
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        res.json({ image_url: response.data.data[0].url });
+    } catch (error) {
+        console.error("Error with DALLE:", error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Failed to generate image' });
     }
 });
 
